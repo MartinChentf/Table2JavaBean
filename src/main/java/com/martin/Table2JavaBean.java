@@ -13,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * <Description> 将数据库中的表转换成对应的Do <br>
@@ -41,6 +43,11 @@ public class Table2JavaBean {
      * 列名类型数组
      */
     private String[] colTypes;
+
+    /**
+     * 是否包含日期属性
+     */
+    private boolean haveDate = false;
 
 
     private void toPojo(String tableName) {
@@ -83,7 +90,13 @@ public class Table2JavaBean {
      */
     private String convertSqlType2JavaType(String sqlType) {
         try {
-            return SqlType.valueOf(sqlType.toUpperCase()).getType();
+            String type = SqlType.valueOf(sqlType.toUpperCase()).getType();
+
+            if ("Date".equalsIgnoreCase(type)) {
+                haveDate = true;
+            }
+
+            return type;
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -109,10 +122,8 @@ public class Table2JavaBean {
         //输出的类字符串
         StringBuffer str = new StringBuffer("");
 
-        //拼接
-        String className = toFirstUpper(convertUnderline2camel(tableName)) + "Do";
-        str.append("@Table(\"").append(tableName).append("\")\n");
-        str.append("public class ").append(className).append(" {\n\n");
+        //拼接类头部
+        str.append(getClassHeadString(tableName));
         //拼接属性
         for(int index=1; index < colnames.length ; index++){
             str.append(getAttrbuteString(colnames[index],colTypes[index]));
@@ -124,7 +135,7 @@ public class Table2JavaBean {
         }
         str.append("}\n");
         //输出到文件中
-        File file = new File(className + ".java");
+        File file = new File(getClassName(tableName) + ".java");
         BufferedWriter write = null;
 
         try {
@@ -143,8 +154,64 @@ public class Table2JavaBean {
         }
         return str;
     }
-    /*
-     * 获取字段字符串*/
+
+    /**
+     * 将表名转换成类名
+     * @param tableName <br>
+     * @return <br>
+     */
+    private String getClassName(String tableName) {
+        return toFirstUpper(convertUnderline2camel(tableName)) + "Do";
+    }
+
+    /**
+     * <Description> 生成类头 <br>
+     *
+     * @author chen.tengfei <br>
+     * @param tableName <br>
+     * @return <br>
+     */
+    private StringBuilder getClassHeadString(String tableName) {
+        String className = getClassName(tableName);
+        SimpleDateFormat format = new SimpleDateFormat("YYYY/MM/dd");
+
+        StringBuilder result = new StringBuilder();
+        result.append(getImportPacket())
+              .append("\n")
+              .append("/**\n")
+              .append(" * <Description> ").append(className).append(" for ").append(tableName).append(" <br>\n")
+              .append(" *\n")
+              .append(" * @author <br>\n")
+              .append(" * @version 1.0 <br>\n")
+              .append(" * @CreateDate ").append(format.format(new Date())).append(" <br>\n")
+              .append(" */\n")
+              .append("@Table(\"").append(tableName).append("\")\n")
+              .append("public class ").append(className).append(" {\n\n");
+
+        return result;
+    }
+
+    /**
+     * 导入可能包含的Java包
+     */
+    private StringBuilder getImportPacket() {
+        StringBuilder result = new StringBuilder();
+
+        if (haveDate) {
+            result.append("import java.util.Date;\n");
+        }
+
+        return result;
+    }
+
+    /**
+     * <Description> 获取字段字符串 <br>
+     *
+     * @author chen.tengfei <br>
+     * @param name <br>
+     * @param type <br>
+     * @return <br>
+     */
     private StringBuffer getAttrbuteString(String name, String type) {
         if(!check(name,type)) {
             System.out.println("类中有属性或者类型为空");
@@ -190,7 +257,13 @@ public class Table2JavaBean {
         return new StringBuffer(format);
     }
 
-    //将名称首字符大写
+    /**
+     * <Description> 将名称首字符大写 <br>
+     *
+     * @author chen.tengfei <br>
+     * @param name <br>
+     * @return <br>
+     */
     private String toFirstUpper(String name) {
         name = name.trim();
         if(name.length() > 1){

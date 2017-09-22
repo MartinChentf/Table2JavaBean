@@ -1,5 +1,6 @@
 package com.martin;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -161,7 +162,7 @@ public class Table2JavaBean {
      * @return <br>
      */
     private String getClassName(String tableName) {
-        return toFirstUpper(convertUnderline2camel(tableName)) + "Do";
+        return StringUtils.capitalize(StringUtil.underscoreToLowerCamel(tableName)) + "Do";
     }
 
     /**
@@ -218,7 +219,7 @@ public class Table2JavaBean {
             return null;
         }
 
-        String field = convertUnderline2camel(name);
+        String field = StringUtil.underscoreToLowerCamel(name);
 
         StringBuffer result = new StringBuffer();
         result.append("    /**\n")
@@ -249,8 +250,8 @@ public class Table2JavaBean {
             return null;
         }
 
-        String field = convertUnderline2camel(name);
-        String methodname = "get" + toFirstUpper(field);
+        String field = StringUtil.underscoreToUpperCamel(name);
+        String methodname = "get" + StringUtils.capitalize(field);
         String format = String.format("    public %s %s() {\n", type, methodname);
         format += String.format("        return this.%s;\n", field);
         format += "    }\n\n";
@@ -312,9 +313,9 @@ public class Table2JavaBean {
             return null;
         }
 
-        String field = convertUnderline2camel(name);
-        String methodname = "set" + toFirstUpper(field);
-        String format = String.format("    public void %s(%s %s) {\n", methodname, type, field);
+        String field = StringUtil.underscoreToLowerCamel(name);
+        String methodName = "set" + StringUtils.capitalize(field);
+        String format = String.format("    public void %s(%s %s) {\n", methodName, type, field);
         format += String.format("        this.%s = %s;\n", field, field);
         format += "    }\n\n";
         return new StringBuffer(format);

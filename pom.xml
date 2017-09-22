@@ -32,12 +32,12 @@
             <artifactId>spring-tx</artifactId>
             <version>${spring.version}</version>
         </dependency>
+
         <dependency>
             <groupId>commons-dbcp</groupId>
             <artifactId>commons-dbcp</artifactId>
             <version>1.4</version>
         </dependency>
-
         <dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc7</artifactId>
@@ -47,6 +47,12 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.41</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.5</version>
         </dependency>
     </dependencies>
 

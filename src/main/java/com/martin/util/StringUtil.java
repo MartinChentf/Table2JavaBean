@@ -1,4 +1,4 @@
-package com.martin;
+package com.martin.util;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +27,7 @@ public abstract class StringUtil {
     /**
      * 下划线正则表达式
      */
-    private static final Pattern UNDERSCORE_PATTERN = Pattern.compile("_(\\w)");;
+    private static final Pattern UNDERSCORE_PATTERN = Pattern.compile("_(\\w)");
 
     /**
      * 占位符格式化
@@ -121,13 +121,21 @@ public abstract class StringUtil {
         return underscore;
     }
 
+    /**
+     * 将下划线式命名转换成驼峰式命名
+     * <p>
+     * 将不含'_'的转换小写
+     * <p>
+     * 将第一个字母转换大写
+     *
+     * @author henry
+     * @param underscore 下划线字符串
+     * @return String
+     */
     public static String underscoreToLowerCamelTitleCase(String underscore) {
         if (StringUtils.isNotEmpty(underscore)) {
-            String camel = underscoreToCamel(underscore);
-            if (underscore.equals(camel)) {
-                return camel.toLowerCase();
-            }
-            return camel;
+            String camel = underscoreToLowerCamel(underscore);
+            return StringUtils.capitalize(camel);
         }
         return underscore;
     }

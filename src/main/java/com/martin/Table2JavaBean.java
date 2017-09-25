@@ -1,5 +1,6 @@
 package com.martin;
 
+import com.martin.util.StringUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,7 +39,7 @@ public class Table2JavaBean {
     /**
      * 列名数组
      */
-    private String[] colnames;
+    private String[] colNames;
 
     /**
      * 列名类型数组
@@ -66,11 +67,11 @@ public class Table2JavaBean {
             //数据库的字段个数
             int len = metadata.getColumnCount();
             //字段名称
-            colnames = new String[len+1];
+            colNames = new String[len+1];
             //字段类型 --->已经转化为java中的类名称了
             colTypes = new String[len+1];
             for(int i= 1;i<=len;i++){
-                colnames[i] = metadata.getColumnName(i); //获取字段名称
+                colNames[i] = metadata.getColumnName(i); //获取字段名称
                 colTypes[i] = convertSqlType2JavaType(metadata.getColumnTypeName(i)); //获取字段类型
             }
         }
@@ -116,7 +117,7 @@ public class Table2JavaBean {
         //获取表类型和表名的字段名
         this.toPojo(tableName);
         //校验
-        if (null == colnames && null == colTypes) {
+        if (null == colNames && null == colTypes) {
             return null;
         }
 
@@ -126,13 +127,13 @@ public class Table2JavaBean {
         //拼接类头部
         str.append(getClassHeadString(tableName));
         //拼接属性
-        for(int index=1; index < colnames.length ; index++){
-            str.append(getAttrbuteString(colnames[index],colTypes[index]));
+        for(int index = 1; index < colNames.length ; index++){
+            str.append(getAttrbuteString(colNames[index],colTypes[index]));
         }
         //拼接get，Set方法
-        for(int index=1; index < colnames.length ; index++){
-            str.append(getGetMethodString(colnames[index],colTypes[index]));
-            str.append(getSetMethodString(colnames[index],colTypes[index]));
+        for(int index = 1; index < colNames.length ; index++){
+            str.append(getGetMethodString(colNames[index],colTypes[index]));
+            str.append(getSetMethodString(colNames[index],colTypes[index]));
         }
         str.append("}\n");
         //输出到文件中
@@ -162,7 +163,7 @@ public class Table2JavaBean {
      * @return <br>
      */
     private String getClassName(String tableName) {
-        return StringUtils.capitalize(StringUtil.underscoreToLowerCamel(tableName)) + "Do";
+        return StringUtil.underscoreToLowerCamelTitleCase(tableName) + "Do";
     }
 
     /**
@@ -180,7 +181,7 @@ public class Table2JavaBean {
         result.append(getImportPacket())
               .append("\n")
               .append("/**\n")
-              .append(" * <Description> ").append(className).append(" for ").append(tableName).append(" <br>\n")
+              .append(" * ").append(className).append(" for ").append(tableName).append(" <br>\n")
               .append(" *\n")
               .append(" * @author <br>\n")
               .append(" * @version 1.0 <br>\n")
@@ -206,7 +207,14 @@ public class Table2JavaBean {
     }
 
     /**
-     * <Description> 获取字段字符串 <br>
+     * 校验name和type是否合法
+     */
+    private boolean check(String name, String type) {
+        return StringUtils.isNotEmpty(name.trim()) && StringUtils.isNotEmpty(type.trim());
+    }
+
+    /**
+     * 获取字段字符串 <br>
      *
      * @author chen.tengfei <br>
      * @param name <br>
@@ -230,27 +238,16 @@ public class Table2JavaBean {
         return result;
     }
 
-    /*
-     * 校验name和type是否合法*/
-    private boolean check(String name, String type) {
-        if("".equals(name) || name == null || name.trim().length() ==0){
-            return false;
-        }
-        if("".equals(type) || type == null || type.trim().length() ==0){
-            return false;
-        }
-        return true;
-
-    }
-    /*
-     * 获取get方法字符串*/
+    /**
+     * 获取get方法字符串
+     */
     private StringBuffer getGetMethodString(String name, String type) {
         if(!check(name,type)) {
             System.out.println("类中有属性或者类型为空");
             return null;
         }
 
-        String field = StringUtil.underscoreToUpperCamel(name);
+        String field = StringUtil.underscoreToLowerCamel(name);
         String methodname = "get" + StringUtils.capitalize(field);
         String format = String.format("    public %s %s() {\n", type, methodname);
         format += String.format("        return this.%s;\n", field);
@@ -259,54 +256,8 @@ public class Table2JavaBean {
     }
 
     /**
-     * <Description> 将名称首字符大写 <br>
-     *
-     * @author chen.tengfei <br>
-     * @param name <br>
-     * @return <br>
+     * 获取set方法字符串
      */
-    private String toFirstUpper(String name) {
-        name = name.trim();
-        if(name.length() > 1){
-            name = name.substring(0, 1).toUpperCase()+name.substring(1);
-        }else
-        {
-            name = name.toUpperCase();
-        }
-        return name;
-    }
-
-    /**
-     * 下划线格式转换成驼峰命名法
-     * @param name <br>
-     * @return <br>
-     */
-    private String convertUnderline2camel(String name) {
-        name = name.trim().toLowerCase();
-
-        StringBuilder camel = new StringBuilder();
-        boolean isUpper = false;
-        for (char ch : name.toCharArray()) {
-            if ('_' == ch) {
-                isUpper = true;
-                continue;
-            }
-
-            if (isUpper) {
-                String upper = "" + ch;
-                camel.append(upper.toUpperCase());
-                isUpper = false;
-            }
-            else {
-                camel.append(ch);
-            }
-        }
-
-        return camel.toString();
-    }
-
-    /*
-     * 获取字段的get方法字符串*/
     private Object getSetMethodString(String name, String type) {
         if(!check(name,type)) {
             System.out.println("类中有属性或者类型为空");
